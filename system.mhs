@@ -1,0 +1,359 @@
+# ##############################################################################
+# Created by Base System Builder Wizard for Xilinx EDK 9.1.02 Build EDK_J_SP2.4
+# Thu May 20 21:59:08 2010
+# Target Board:  Digilent Nexys 2-500 Board Rev C
+# Family:	 spartan3e
+# Device:	 XC3S500E
+# Package:	 FG320
+# Speed Grade:	 -4
+# Processor: Microblaze
+# System clock frequency: 50.000000 MHz
+# Debug interface: No Debug
+# On Chip Memory :  64 KB
+# Total Off Chip Memory :  16 MB
+# - RAM =  16 MB
+# ##############################################################################
+
+
+ PARAMETER VERSION = 2.1.0
+
+
+ PORT fpga_0_RS232_PORT_RX_pin = fpga_0_RS232_PORT_RX, DIR = I
+ PORT fpga_0_RS232_PORT_TX_pin = fpga_0_RS232_PORT_TX, DIR = O
+ PORT fpga_0_LEDs_8Bit_GPIO_d_out_pin = fpga_0_LEDs_8Bit_GPIO_d_out, DIR = O, VEC = [0:7]
+ PORT fpga_0_Push_Buttons_3Bit_GPIO_in_pin = fpga_0_Push_Buttons_3Bit_GPIO_in, DIR = I, VEC = [0:4]
+ PORT fpga_0_Switches_8Bit_GPIO_in_pin = fpga_0_Switches_8Bit_GPIO_in, DIR = I, VEC = [0:7]
+ PORT fpga_0_Micron_RAM_Mem_A_pin = fpga_0_Micron_RAM_Mem_A, DIR = O, VEC = [9:31]
+ PORT fpga_0_Micron_RAM_Mem_DQ_pin = fpga_0_Micron_RAM_Mem_DQ, DIR = IO, VEC = [0:15]
+ PORT fpga_0_Micron_RAM_Mem_OEN_pin = fpga_0_Micron_RAM_Mem_OEN, DIR = O
+ PORT fpga_0_Micron_RAM_Mem_WEN_pin = fpga_0_Micron_RAM_Mem_WEN, DIR = O
+ PORT fpga_0_Micron_RAM_Mem_BEN_pin = fpga_0_Micron_RAM_Mem_BEN, DIR = O, VEC = [0:1]
+ PORT fpga_0_net_gnd_pin = net_gnd, DIR = O
+ PORT fpga_0_net_gnd_1_pin = net_gnd, DIR = O
+ PORT fpga_0_net_gnd_2_pin = net_gnd, DIR = O
+ PORT sys_clk_pin = dcm_clk_s, DIR = I, SIGIS = CLK, CLK_FREQ = 50000000
+ PORT sys_rst_pin = sys_rst_s, DIR = I, RST_POLARITY = 1, SIGIS = RST
+ PORT segs = sseg_d_segs, DIR = O, VEC = [7:0]
+ PORT seg_en = sseg_d_seg_en, DIR = O, VEC = [3:0]
+ PORT timer_0_PWM0_pin = timer_0_PWM0, DIR = O
+ PORT timer_1_PWM0_pin = timer_1_PWM0, DIR = O
+ PORT sck = opb_spi_0_SCK_O, DIR = O
+ PORT miso = opb_spi_0_MISO_I, DIR = I
+ PORT ss = opb_spi_0_SS_O, DIR = O, VEC = [0:0]
+ PORT timer_2_PWM0_pin = timer_2_PWM0, DIR = O
+ PORT LCD_sck = lcd_fsl_0_LCD_sck, DIR = O
+ PORT LCD_dio = lcd_fsl_0_LCD_dio, DIR = O
+ PORT LCD_cs = lcd_fsl_0_LCD_cs, DIR = O
+ PORT spi2_MISO_pin = spi2_MISO, DIR = I
+ PORT gpio_out = gpio_GPIO_d_out, DIR = O, VEC = [0:31]
+ PORT lcd_uart_RX_pin = lcd_uart_RX, DIR = I
+ PORT lcd_uart_TX_pin = lcd_uart_TX, DIR = O
+
+
+BEGIN microblaze
+ PARAMETER INSTANCE = microblaze_0
+ PARAMETER HW_VER = 6.00.b
+ PARAMETER C_USE_FPU = 1
+ PARAMETER C_AREA_OPTIMIZED = 1
+ PARAMETER C_USE_DIV = 1
+ PARAMETER C_FSL_LINKS = 1
+ BUS_INTERFACE DLMB = dlmb
+ BUS_INTERFACE ILMB = ilmb
+ BUS_INTERFACE DOPB = mb_opb
+ BUS_INTERFACE MFSL0 = fsl_v20_0
+ PORT INTERRUPT = opb_intc_0_Irq
+END
+
+BEGIN lmb_v10
+ PARAMETER INSTANCE = ilmb
+ PARAMETER HW_VER = 1.00.a
+ PARAMETER C_EXT_RESET_HIGH = 1
+ PORT SYS_Rst = sys_rst_s
+ PORT LMB_Clk = sys_clk_s
+END
+
+BEGIN lmb_v10
+ PARAMETER INSTANCE = dlmb
+ PARAMETER HW_VER = 1.00.a
+ PARAMETER C_EXT_RESET_HIGH = 1
+ PORT SYS_Rst = sys_rst_s
+ PORT LMB_Clk = sys_clk_s
+END
+
+BEGIN lmb_bram_if_cntlr
+ PARAMETER INSTANCE = dlmb_cntlr
+ PARAMETER HW_VER = 2.00.a
+ PARAMETER C_BASEADDR = 0x00000000
+ PARAMETER C_HIGHADDR = 0x00007FFF
+ BUS_INTERFACE SLMB = dlmb
+ BUS_INTERFACE BRAM_PORT = dlmb_port
+END
+
+BEGIN lmb_bram_if_cntlr
+ PARAMETER INSTANCE = ilmb_cntlr
+ PARAMETER HW_VER = 2.00.a
+ PARAMETER C_BASEADDR = 0x00000000
+ PARAMETER C_HIGHADDR = 0x00007FFF
+ BUS_INTERFACE SLMB = ilmb
+ BUS_INTERFACE BRAM_PORT = ilmb_port
+END
+
+BEGIN bram_block
+ PARAMETER INSTANCE = lmb_bram
+ PARAMETER HW_VER = 1.00.a
+ BUS_INTERFACE PORTA = ilmb_port
+ BUS_INTERFACE PORTB = dlmb_port
+END
+
+BEGIN opb_v20
+ PARAMETER INSTANCE = mb_opb
+ PARAMETER HW_VER = 1.10.c
+ PARAMETER C_EXT_RESET_HIGH = 1
+ PORT SYS_Rst = sys_rst_s
+ PORT OPB_Clk = sys_clk_s
+END
+
+BEGIN opb_gpio
+ PARAMETER INSTANCE = LEDs_8Bit
+ PARAMETER HW_VER = 3.01.b
+ PARAMETER C_GPIO_WIDTH = 8
+ PARAMETER C_IS_DUAL = 0
+ PARAMETER C_IS_BIDIR = 0
+ PARAMETER C_ALL_INPUTS = 0
+ PARAMETER C_BASEADDR = 0x40000000
+ PARAMETER C_HIGHADDR = 0x400001FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT GPIO_d_out = fpga_0_LEDs_8Bit_GPIO_d_out
+END
+
+BEGIN opb_gpio
+ PARAMETER INSTANCE = Push_Buttons_3Bit
+ PARAMETER HW_VER = 3.01.b
+ PARAMETER C_GPIO_WIDTH = 5
+ PARAMETER C_IS_DUAL = 0
+ PARAMETER C_IS_BIDIR = 0
+ PARAMETER C_ALL_INPUTS = 1
+ PARAMETER C_BASEADDR = 0x40002000
+ PARAMETER C_HIGHADDR = 0x400021FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT GPIO_in = fpga_0_Push_Buttons_3Bit_GPIO_in
+END
+
+BEGIN opb_gpio
+ PARAMETER INSTANCE = Switches_8Bit
+ PARAMETER HW_VER = 3.01.b
+ PARAMETER C_GPIO_WIDTH = 8
+ PARAMETER C_IS_DUAL = 0
+ PARAMETER C_IS_BIDIR = 0
+ PARAMETER C_ALL_INPUTS = 1
+ PARAMETER C_BASEADDR = 0x40004000
+ PARAMETER C_HIGHADDR = 0x400041FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT GPIO_in = fpga_0_Switches_8Bit_GPIO_in
+END
+
+BEGIN opb_uartlite
+ PARAMETER INSTANCE = RS232_PORT
+ PARAMETER HW_VER = 1.00.b
+ PARAMETER C_BAUDRATE = 9600
+ PARAMETER C_DATA_BITS = 8
+ PARAMETER C_ODD_PARITY = 0
+ PARAMETER C_USE_PARITY = 0
+ PARAMETER C_CLK_FREQ = 50000000
+ PARAMETER C_BASEADDR = 0x40006000
+ PARAMETER C_HIGHADDR = 0x400061FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT RX = fpga_0_RS232_PORT_RX
+ PORT TX = fpga_0_RS232_PORT_TX
+END
+
+BEGIN opb_emc
+ PARAMETER INSTANCE = Micron_RAM
+ PARAMETER HW_VER = 2.00.a
+ PARAMETER C_OPB_CLK_PERIOD_PS = 20000
+ PARAMETER C_NUM_BANKS_MEM = 1
+ PARAMETER C_MAX_MEM_WIDTH = 16
+ PARAMETER C_MEM0_WIDTH = 16
+ PARAMETER C_INCLUDE_DATAWIDTH_MATCHING_0 = 1
+ PARAMETER C_SYNCH_MEM_0 = 0
+ PARAMETER C_TCEDV_PS_MEM_0 = 85000
+ PARAMETER C_TWC_PS_MEM_0 = 85000
+ PARAMETER C_TAVDV_PS_MEM_0 = 85000
+ PARAMETER C_TWP_PS_MEM_0 = 55000
+ PARAMETER C_THZCE_PS_MEM_0 = 8000
+ PARAMETER C_THZOE_PS_MEM_0 = 8000
+ PARAMETER C_TLZWE_PS_MEM_0 = 5000
+ PARAMETER C_MEM0_BASEADDR = 0x41000000
+ PARAMETER C_MEM0_HIGHADDR = 0x41ffffff
+ BUS_INTERFACE SOPB = mb_opb
+ PORT Mem_A = fpga_0_Micron_RAM_Mem_A_split
+ PORT Mem_DQ = fpga_0_Micron_RAM_Mem_DQ
+ PORT Mem_BEN = fpga_0_Micron_RAM_Mem_BEN
+ PORT Mem_WEN = fpga_0_Micron_RAM_Mem_WEN
+ PORT Mem_OEN = fpga_0_Micron_RAM_Mem_OEN
+END
+
+BEGIN util_bus_split
+ PARAMETER INSTANCE = Micron_RAM_util_bus_split_0
+ PARAMETER HW_VER = 1.00.a
+ PARAMETER C_SIZE_IN = 32
+ PARAMETER C_LEFT_POS = 0
+ PARAMETER C_SPLIT = 9
+ PORT Sig = fpga_0_Micron_RAM_Mem_A_split
+ PORT Out2 = fpga_0_Micron_RAM_Mem_A
+END
+
+BEGIN dcm_module
+ PARAMETER INSTANCE = dcm_0
+ PARAMETER HW_VER = 1.00.c
+ PARAMETER C_CLK0_BUF = TRUE
+ PARAMETER C_CLKIN_PERIOD = 20.000000
+ PARAMETER C_CLK_FEEDBACK = 1X
+ PARAMETER C_EXT_RESET_HIGH = 1
+ PORT CLKIN = dcm_clk_s
+ PORT CLK0 = sys_clk_s
+ PORT CLKFB = sys_clk_s
+ PORT RST = net_gnd
+ PORT LOCKED = dcm_0_lock
+END
+
+BEGIN opb_gpio
+ PARAMETER INSTANCE = sseg
+ PARAMETER HW_VER = 3.01.b
+ PARAMETER C_GPIO_WIDTH = 16
+ PARAMETER C_IS_BIDIR = 0
+ PARAMETER C_BASEADDR = 0x40008000
+ PARAMETER C_HIGHADDR = 0x400081FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT GPIO_d_out = sseg_GPIO_d_out
+END
+
+BEGIN opb_timer
+ PARAMETER INSTANCE = timer_0
+ PARAMETER HW_VER = 1.00.b
+ PARAMETER C_BASEADDR = 0x4000A000
+ PARAMETER C_HIGHADDR = 0x4000A1FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT PWM0 = timer_0_PWM0
+ PORT Interrupt = timer_0_Interrupt
+END
+
+BEGIN opb_timer
+ PARAMETER INSTANCE = timer_1
+ PARAMETER HW_VER = 1.00.b
+ PARAMETER C_BASEADDR = 0x4000C000
+ PARAMETER C_HIGHADDR = 0x4000C1FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT PWM0 = timer_1_PWM0
+ PORT Interrupt = timer_1_Interrupt
+END
+
+BEGIN sseg
+ PARAMETER INSTANCE = sseg_d
+ PORT clk = sys_clk_s
+ PORT data = sseg_GPIO_d_out
+ PORT segs = sseg_d_segs
+ PORT seg_en = sseg_d_seg_en
+END
+
+BEGIN opb_intc
+ PARAMETER INSTANCE = opb_intc_0
+ PARAMETER HW_VER = 1.00.c
+ PARAMETER C_BASEADDR = 0x40012000
+ PARAMETER C_HIGHADDR = 0x400121FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT Irq = opb_intc_0_Irq
+ PORT Intr = timer_0_Interrupt&timer_1_Interrupt&timer_2_Interrupt&timer_3_Interrupt&opb_spi_0_IP2INTC_Irpt
+END
+
+BEGIN opb_timer
+ PARAMETER INSTANCE = timer_2
+ PARAMETER HW_VER = 1.00.b
+ PARAMETER C_BASEADDR = 0x4000E000
+ PARAMETER C_HIGHADDR = 0x4000E1FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT PWM0 = timer_2_PWM0
+ PORT Interrupt = timer_2_Interrupt
+END
+
+BEGIN opb_timer
+ PARAMETER INSTANCE = timer_3
+ PARAMETER HW_VER = 1.00.b
+ PARAMETER C_BASEADDR = 0x40010000
+ PARAMETER C_HIGHADDR = 0x400101FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT Interrupt = timer_3_Interrupt
+END
+
+BEGIN opb_spi
+ PARAMETER INSTANCE = spi
+ PARAMETER HW_VER = 1.00.e
+ PARAMETER C_BASEADDR = 0x40014000
+ PARAMETER C_HIGHADDR = 0x400141FF
+ PARAMETER C_OPB_SCK_RATIO = 16
+ BUS_INTERFACE SOPB = mb_opb
+ PORT IP2INTC_Irpt = opb_spi_0_IP2INTC_Irpt
+ PORT SCK_O = opb_spi_0_SCK_O
+ PORT MISO_I = opb_spi_0_MISO_I
+ PORT SS_O = opb_spi_0_SS_O
+END
+
+BEGIN lcd_fsl
+ PARAMETER INSTANCE = lcd_fsl_0
+ PARAMETER HW_VER = 1.00.a
+ BUS_INTERFACE SFSL = fsl_v20_0
+ PORT LCD_sck = lcd_fsl_0_LCD_sck
+ PORT LCD_dio = lcd_fsl_0_LCD_dio
+ PORT LCD_cs = lcd_fsl_0_LCD_cs
+END
+
+BEGIN fsl_v20
+ PARAMETER INSTANCE = fsl_v20_0
+ PARAMETER HW_VER = 2.10.a
+ PARAMETER C_FSL_DEPTH = 8
+ PORT FSL_Clk = sys_clk_s
+ PORT SYS_Rst = sys_rst_s
+END
+
+BEGIN a2d_addon
+ PARAMETER INSTANCE = spi2
+ PORT D = spi2_D
+ PORT SCK = opb_spi_0_SCK_O
+ PORT MISO = spi2_MISO
+ PORT SS = opb_spi_0_SS_O
+END
+
+BEGIN opb_gpio
+ PARAMETER INSTANCE = spi2_data
+ PARAMETER HW_VER = 3.01.b
+ PARAMETER C_GPIO_WIDTH = 16
+ PARAMETER C_IS_BIDIR = 1
+ PARAMETER C_ALL_INPUTS = 0
+ PARAMETER C_BASEADDR = 0x40016000
+ PARAMETER C_HIGHADDR = 0x400161FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT GPIO_IO_I = spi2_D
+END
+
+BEGIN opb_gpio
+ PARAMETER INSTANCE = gpio
+ PARAMETER HW_VER = 3.01.b
+ PARAMETER C_BASEADDR = 0x40018000
+ PARAMETER C_HIGHADDR = 0x400181FF
+ BUS_INTERFACE SOPB = mb_opb
+ PORT GPIO_d_out = gpio_GPIO_d_out
+END
+
+BEGIN opb_uartlite
+ PARAMETER INSTANCE = lcd_uart
+ PARAMETER HW_VER = 1.00.b
+ PARAMETER C_BASEADDR = 0x4001A000
+ PARAMETER C_HIGHADDR = 0x4001A1FF
+ PARAMETER C_BAUDRATE = 520833
+ PARAMETER C_CLK_FREQ = 50000000
+ PARAMETER C_USE_PARITY = 0
+ BUS_INTERFACE SOPB = mb_opb
+ PORT RX = lcd_uart_RX
+ PORT TX = lcd_uart_TX
+END
+

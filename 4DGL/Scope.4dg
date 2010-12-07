@@ -1,0 +1,376 @@
+#platform "GOLDELOX-GFX2"
+
+/*  4DGL Demo Application
+    - Basic Intro Demo -
+    -- GOLDELOX Platform --
+*/
+
+#inherit "4DGL_16bitColours.fnc"
+
+var l1[80];  // 160 byte buffer
+//var l2[80];  // 160 byte buffer
+//var xv[122];
+var buf[10]; // string buffer
+var rxbuf[16];
+
+var lut[16];
+
+var joy;
+
+// time: timbase * 10^(-3*timebase_exp)
+var timebase;
+var timebase_exp; // 0: sec, 1: ms, 2: uS, 3: nS
+
+// select: which display element is selected
+var select;
+
+// volts/div = volts * 10 ^ (-3 * volts_exp)
+var volts;
+var volts_exp;
+
+// 0x1: ch1 enable
+// 0x2: ch2 enable
+// 0x4: ch1 trigger
+// 0x8: ch2 trigger
+var channels;
+
+func lines()
+    var i;
+    var y11;
+    var y12;
+    var y21;
+    var y22;
+
+    gfx_Set(PEN_SIZE, SOLID);
+    gfx_Rectangle(0, 10, 159, 117, BLACK);
+
+    //i := 0;
+    //gfx_Line(0, 10, 0, 118, BLACK);
+    // test duration: ~60 frames
+    // rectangle clear:     (choppy and fast)
+    // drawing with pixels:     6 sec  10  fps
+    // drawing with lines:      7 sec  8.6 fps
+    // drawing with polyline:   5 sec  12 fps (single trace, 120 points)
+    // line clear:          (clean but slow)
+    // drawing with pixels:     46 sec 1.3 fps
+    // drawing with lines:      47 sec 1.3 fps
+
+    // decoding packed data, rectangle clear, line draw:
+    //  sine wave:      11 sec, 5.5 fps
+    //  max travel:     0.8 fps
+    while( i < 159 )
+        y11 := (l1[i/2] >> (8*(i%2))) & 0xFF;
+ //       y21 := (l2[i/2] >> (8*(i%2))) & 0xFF;
+        i++;
+        y12 := (l1[i/2] >> (8*(i%2))) & 0xFF;
+ //       y22 := (l2[i/2] >> (8*(i%2))) & 0xFF;
+ //       gfx_Line(i-1, y21, i, y22, YELLOW);
+        gfx_Line(i-1, y11, i, y12, GREEN);
+
+        //gfx_Line(i+1, 10, i+1, 118, BLACK);
+        //gfx_Line(i, 128 - l1[i], i+1, 128 - l1[i+1], YELLOW);
+        //gfx_Line(i, l1[i], i+1, l1[i+1], GREEN);
+        //gfx_PutPixel(i, 128 - l1[i], YELLOW);
+        //gfx_PutPixel(i, l1[i], GREEN);
+    wend
+    //gfx_Polyline(120, xv, l1, GREEN);
+
+    /*gfx_Set(OBJECT_COLOUR, YELLOW);
+    y := l2[0] & 0xFF;
+    gfx_MoveTo(0, y);
+    i := 1;
+    while( i < 160 )
+        if( i%2 == 0 )
+            y := l2[i/2] & 0xFF;
+        else
+            y := (l2[i/2] >> 8) & 0xFF;
+        endif
+        gfx_LineTo(i, y);
+        i++;
+    wend
+
+    gfx_Set(OBJECT_COLOUR, GREEN);
+    y := l1[0] & 0xFF;
+    gfx_MoveTo(0, y);
+    i := 1;
+    while( i < 160 )
+        if( i%2 == 0 )
+            y := l1[i/2] & 0xFF;
+        else
+            y := (l1[i/2] >> 8) & 0xFF;
+        endif
+        gfx_LineTo(i, y);
+        i++;
+    wend
+    */
+    return;
+endfunc
+
+func border()
+    var bufp;
+
+    // clear status bar areas
+    gfx_Set(PEN_SIZE, SOLID);
+    gfx_Rectangle(0, 0, 159, 9, BLACK);
+
+    // upper status bar
+    gfx_Line(0, 9, 160, 9, RED);
+    //gfx_Line(80, 0, 80, 9, RED);
+
+    // Time base
+    if( select == 0 )
+        txt_Set(TEXT_COLOUR, ORANGE);
+    else
+        txt_Set(TEXT_COLOUR, RED);
+    endif
+    gfx_MoveTo(1,0);
+    putstr("T: ");
+    print(timebase);
+    bufp := "s ";
+    if( timebase_exp == 1 )
+        bufp := "mS ";
+    endif
+    if( timebase_exp == 2 )
+        bufp := "uS ";
+    endif
+    if( timebase_exp == 3 )
+        bufp := "nS ";
+    endif
+    putstr(bufp);
+
+    // Voltage div
+    if( select == 1 )
+        txt_Set(TEXT_COLOUR, ORANGE);
+    else
+        txt_Set(TEXT_COLOUR, RED);
+    endif
+    gfx_MoveTo(82,0);
+    putstr("V: ");
+    print(volts);
+    bufp := "V ";
+    if( volts_exp == 1 )
+        bufp := "mV ";
+    endif
+    if( volts_exp == 2 )
+        bufp := "uV ";
+    endif
+    if( volts_exp == 3 )
+        bufp := "nV ";
+    endif
+    putstr(bufp);
+
+
+
+   // lower status bar
+    gfx_Rectangle(0, 118, 159, 127, BLACK);
+    gfx_Set(PEN_SIZE, OUTLINE);
+    //gfx_Rectangle(0, 118, 159, 127, RED);
+    gfx_Line(0, 118, 160, 118, RED);
+
+    // CH1 select
+    if( channels & 0x1 )
+        gfx_Set(PEN_SIZE, SOLID);
+    else
+        gfx_Set(PEN_SIZE, OUTLINE);
+    endif
+    if( select == 2 )
+        gfx_Rectangle(2, 120, 8, 126, ORANGE);
+        txt_Set(TEXT_COLOUR, ORANGE);
+    else
+        gfx_Rectangle(2, 120, 8, 126, RED);
+        txt_Set(TEXT_COLOUR, RED);
+    endif
+    gfx_MoveTo(11, 120);
+    putstr("Ch1");
+
+    // CH2 select
+    if( channels & 0x2 )
+        gfx_Set(PEN_SIZE, SOLID);
+    else
+        gfx_Set(PEN_SIZE, OUTLINE);
+    endif
+    if( select == 3 )
+        gfx_Rectangle(40, 120, 46, 126, ORANGE);
+        txt_Set(TEXT_COLOUR, ORANGE);
+    else
+        gfx_Rectangle(40, 120, 46, 126, RED);
+        txt_Set(TEXT_COLOUR, RED);
+    endif
+    gfx_MoveTo(49, 120);
+    putstr("Ch2");
+
+    // Trigger
+    gfx_MoveTo(90, 120);
+    if( select == 4 )
+        txt_Set(TEXT_COLOUR, ORANGE);
+    else
+        txt_Set(TEXT_COLOUR, RED);
+    endif
+    putstr("Trigger");
+    gfx_MoveTo(144, 120);
+    if( channels & 0x4 )
+        putstr("1");
+    endif
+    if( channels & 0x8 )
+        putstr("2");
+    endif
+    return;
+endfunc
+
+//-------------------------------------------------------------------------------------------//
+func main()
+    var x;
+    var time;
+    var s1;
+    var s2;
+
+    var oldjoy;
+
+    // global initializations
+    joy := 0;
+    oldjoy := 0;
+    // 10uS
+    timebase := 10;
+    timebase_exp := 2;
+    // 1V
+    volts := 1;
+    volts_exp := 0;
+    // select time
+    select := 0;
+    // both enabled and triggered
+    channels := 0xF;
+
+    setbaud(5); // 230400 baud
+
+    com_Init(rxbuf,16,0);
+    serout(0x55);
+
+    pin_Set(ANALOGUE_10, IO1);
+
+    // initialize color look-up table
+    lut[0]  := BLACK;
+    lut[1]  := BLUE;
+    lut[2]  := GREEN;
+    lut[3]  := YELLOW;
+    lut[4]  := ORANGE;
+    lut[5]  := RED;
+    lut[6]  := PURPLE;
+    lut[7]  := WHITE;
+    lut[8]  := BLACK;
+    lut[9]  := BLUE;
+    lut[10] := GREEN;
+    lut[11] := YELLOW;
+    lut[12] := ORANGE;
+    lut[13] := RED;
+    lut[14] := PURPLE;
+    lut[15] := WHITE;
+
+    x := 0;
+    gfx_Set(OUTLINE_COLOUR, BLUE); // set outline colour, gfx_Cls() will draw outline
+
+    gfx_Cls();    // clear the screen, set cursor position to 0,0
+    border();
+
+    time := 0;
+    /*while( x < 120 )
+        xv[x] := x;
+        x++;
+    wend*/
+    x := 0;
+    while ( x < 80 )
+        l1[x] := 0x4040;
+ //       l2[x] := 0x4242;
+        x++;
+    wend
+    lines();
+
+    repeat
+        x := 0;
+        /*time++;
+        while ( x < 80 )
+            l1[x] := (SIN((2*x+time)*3)/3 + 64) | ((SIN((2*x+time+1)*3)/3 + 64) << 8);
+            l2[x] := (COS((2*x+time)*3)/3 + 64) | ((COS((2*x+time+1)*3)/3 + 64) << 8);
+            //l1[x] := 0x7010;
+            //l2[x] := 0x1070;
+            //l2[x] := COS(x*3)/3 + 64;
+            x++;
+        wend*/
+        /*repeat
+            s1 := serin();
+        until( s1 < 256 );*/
+
+        while( com_Count() < 1 )
+            if( com_Full() )
+                com_Init(rxbuf,16,0);
+            endif
+        wend
+        //border();
+
+        if( com_Count() > 0 )
+            s1 := serin();
+            if( s1 == 'D' ) // Data input
+                /*x := 0;
+                while ( x < 80 )
+                    while( com_Count() < 2)
+                        s1++;
+                    wend
+                    s1 := serin();
+                    s2 := serin();
+
+                    l1[x] := (s1 << 8) | s2;
+                    x++;
+                wend
+                lines();*/
+                gfx_ClipWindow(0, 10, 159, 117);
+                gfx_FocusWindow();
+                serout(0x05);
+                disp_BlitPixelsFromCOM(lut); // expecting 8640 bytes
+                while(*IMG_PIXEL_COUNT); // wait for all data to arrive
+                serout(0x05);
+            endif
+
+            if( s1 == 'S' ) // settings input
+                while( com_Count() < 3);
+                timebase := serin();
+                timebase := timebase | (serin() << 8);
+                timebase_exp := serin();
+                while( com_Count() < 3);
+                volts := serin();
+                volts := volts | (serin() << 8);
+                volts_exp := serin();
+                while( com_Count() < 2);
+                channels := serin();
+                select := serin();
+                border();
+                serout(0x05); // transmit ack
+            endif
+
+            if( s1 == 'A' ) // analog read
+                joy := pin_Read(IO1);
+                serout(joy >> 8);
+                serout(joy&0xFF);
+                border();
+                serout(0x05);
+            endif
+
+            if( com_Full() )
+                com_Init(rxbuf,16,0);
+            endif
+        endif
+
+       //border();
+
+ //       to(buf); putnum(DEC5Z, x++);                // put the number in the buffer
+ //       to(COM0); print("ntesting ", [STR] buf);  // send message and buffer to com port
+
+        //txt_Set(FONT_SIZE, FONT_LARGE);
+        //txt_Set(TEXT_WIDTH, 3);
+        //txt_Set(TEXT_HEIGHT, 3);
+        //txt_MoveCursor(4,1);           // reset cursor to line 4, column 3
+//        putstr(buf);                         // print number to screen
+        //pause(30); // with this delay, 13 sec. without, 11 sec. 4.6 fps vs. 5.5 fps
+    forever
+endfunc
+//-------------------------------------------------------------------------------------------//
+
+
